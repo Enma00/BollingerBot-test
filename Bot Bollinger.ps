@@ -1,0 +1,38 @@
+//@version=5
+strategy("Bollinger Bands Intraday", overlay=true)
+
+// Paramètres des bandes de Bollinger
+length = input.int(title="BB Length", defval=20, minval=1)
+mult = input.float(title="BB Mult", defval=2.0, minval=0.001)
+
+// Calcul Bollinger
+basis = ta.sma(close, length)
+dev = mult * ta.stdev(close, length)
+upper = basis + dev
+lower = basis - dev
+
+// Calcul du signal d'achat et de vente
+longCondition = ta.crossover(close, upper)
+shortCondition = ta.crossunder(close, lower)
+
+// Exécution de la stratégie
+if (longCondition)
+    strategy.entry("Buy", strategy.long)
+    lastLow = ta.lowest(low, length)
+    stopLoss = lastLow - 3 * dev
+    strategy.exit("Exit Buy", "Buy", stop=stopLoss)
+
+if (shortCondition)
+    strategy.entry("Sell", strategy.short)
+    lastHigh = ta.highest(high, length)
+    stopLoss = lastHigh + 3 * dev
+    strategy.exit("Exit Sell", "Sell", stop=stopLoss)
+
+// Affichage Bollinger
+plot(basis, color=color.white, title="Basis")
+plot(upper, color=color.green, title="Upper")
+plot(lower, color=color.red, title="Lower")
+
+// Affichage des signaux d'achat et de vente
+plotshape(longCondition, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="Buy")
+plotshape(shortCondition, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Sell") 
